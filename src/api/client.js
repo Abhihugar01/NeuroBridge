@@ -1,7 +1,9 @@
 // src/api/client.js
 // All API calls to the FastAPI backend
 
-const BASE = import.meta.env.VITE_API_URL || `/api`;
+// Fallback to a production URL if VITE_API_URL is missing
+const BASE = import.meta.env.VITE_API_URL ||
+    (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
 
 async function request(method, path, body, isForm = false, timeoutMs = 120000) {
     const controller = new AbortController();
@@ -43,7 +45,7 @@ async function request(method, path, body, isForm = false, timeoutMs = 120000) {
             throw new Error("Request timed out — backend may be overloaded. Please try again.");
         }
         if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError") || err.message.includes("ERR_CONNECTION_REFUSED")) {
-            throw new Error(`Cannot connect to the backend server. Please ensure the backend is running by executing 'start_backend.bat'.`);
+            throw new Error(`Connection failed. If you just deployed, the backend might be starting up (Render Free tier takes ~30s).`);
         }
         throw err;
     }
