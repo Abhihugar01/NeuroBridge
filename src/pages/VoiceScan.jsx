@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Mic, MicOff, Globe, RefreshCw, Brain, AlertTriangle,
     CheckCircle, Info, Volume2, ChevronRight, Wifi, Activity, ShieldCheck,
-    Server, AlertCircle, Loader, Users
+    Server, AlertCircle, Loader, Users, Utensils
 } from 'lucide-react';
 import { LANGUAGES, AI_TIPS } from '../data/mockData';
 import { api, checkBackendHealth } from '../api/client';
@@ -895,6 +895,25 @@ export default function VoiceScan({ onNavigate, patients = [], activePatientId, 
                                 </div>
                             )}
 
+                            {/* Nutritional Advice */}
+                            <div className="card card-gradient-green" style={{ marginBottom: 20, border: '1px solid var(--accent-green)33' }}>
+                                <div className="section-title"><Utensils size={16} color="var(--accent-green)" /> AI Nutritional Support</div>
+                                <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                                    {rc === 'High' ?
+                                        "A high-antioxidant, anti-inflammatory diet is critical. Focus on Omega-3 fatty acids from fish and flax seeds to support neurological repair." :
+                                        rc === 'Medium' ?
+                                            "Subtle changes detected. We recommend increasing your intake of berries and leafy greens to boost neuro-protection." :
+                                            "Maintaining a Mediterranean-style diet is recommended to preserve your currently stable biomarkers."
+                                    }
+                                    <br /><br />
+                                    <strong>Recommended Recipe:</strong> {
+                                        rc === 'High' ? "Baked Salmon with Lemon & Dill" :
+                                            rc === 'Medium' ? "Berry & Flax Seed Smoothie" :
+                                                "Walnut & Spinach Salad"
+                                    }
+                                </div>
+                            </div>
+
                             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
                                 <button className="btn btn-secondary" onClick={reset}><RefreshCw size={16} /> New Scan</button>
                                 {rc !== 'Low' && (
@@ -907,11 +926,9 @@ export default function VoiceScan({ onNavigate, patients = [], activePatientId, 
                                         </button>
                                     </>
                                 )}
-                                {result && (typeof motorResult !== 'undefined' && motorResult) && (
-                                    <button className="btn btn-xl btn-purple" style={{ width: '100%', marginTop: 12, border: '2px solid white' }} onClick={() => onNavigate('fusion')}>
-                                        <ShieldCheck size={20} /> VIEW FULL MULTIMODAL FUSION REPORT
-                                    </button>
-                                )}
+                                <button className="btn btn-xl btn-green" style={{ width: '100%', marginTop: 12, border: '2px solid white' }} onClick={() => onNavigate('recipes')}>
+                                    <Utensils size={20} /> VIEW 50+ BRAIN-HEALTHY RECIPES
+                                </button>
                             </div>
                         </div>
                     )}

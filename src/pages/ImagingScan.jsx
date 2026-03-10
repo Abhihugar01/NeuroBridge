@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { ShieldCheck, Upload, Zap, Brain, AlertCircle, CheckCircle, Info, ChevronRight, Loader } from 'lucide-react';
+import { ShieldCheck, Upload, Zap, Brain, AlertCircle, CheckCircle, Info, ChevronRight, Loader, Utensils } from 'lucide-react';
 import { api } from '../api/client';
 
 export default function ImagingScan({ patients, activePatientId, onNavigate }) {
@@ -147,9 +147,9 @@ export default function ImagingScan({ patients, activePatientId, onNavigate }) {
                                     <button
                                         className="btn btn-primary"
                                         style={{ width: '100%', marginTop: 20 }}
-                                        onClick={() => onNavigate('fusion')}
+                                        onClick={() => onNavigate('recipes')}
                                     >
-                                        View Updated Fusion Report <ChevronRight size={16} />
+                                        Explore Brain-Specific Diets <Utensils size={18} />
                                     </button>
                                 </div>
                             </div>

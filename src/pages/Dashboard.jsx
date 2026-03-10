@@ -1,6 +1,6 @@
 // src/pages/Dashboard.jsx
 import { useState, useEffect } from 'react';
-import { Activity, TrendingUp, Users, AlertCircle, Brain, ArrowUpRight, Mic, Calendar, Watch, Trophy, ChevronRight, Zap, Smartphone } from 'lucide-react';
+import { Activity, TrendingUp, Users, AlertCircle, Brain, ArrowUpRight, Mic, Calendar, Watch, Trophy, ChevronRight, Zap, Smartphone, Utensils, Heart } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Area, AreaChart } from 'recharts';
 import { api, checkBackendHealth } from '../api/client';
 
@@ -19,10 +19,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function Dashboard({
     onNavigate,
     activePatientId,
-    activePage,
-    wearableConnected,
-    wearablePulse,
-    wearableDevice
+    activePage
 }) {
     const [animIn, setAnimIn] = useState(false);
     const [stats, setStats] = useState([]);
@@ -94,8 +91,8 @@ export default function Dashboard({
     const quickActions = [
         { id: 'scan', label: 'Start Voice Scan', desc: 'Analyze biomarkers now', icon: Mic, color: 'var(--brand-1)' },
         { id: 'appointment', label: 'AI Triage Bot', desc: 'Find & book a doctor', icon: Calendar, color: 'var(--accent-cyan)' },
-        { id: 'wearable', label: 'Wearable Fusion', desc: 'Sync health data', icon: Watch, color: 'var(--accent-green)' },
-        { id: 'gamification', label: 'Daily Check-in', desc: 'Earn XP & badges', icon: Trophy, color: 'var(--accent-amber)' },
+        { id: 'recipes', label: 'Recipe Maker', desc: '50+ Therapeutic meals', icon: Utensils, color: 'var(--accent-green)' },
+        { id: 'braingym', label: 'Brain Gym', desc: 'Cognitive Daily Drills', icon: Trophy, color: 'var(--accent-amber)' },
     ];
 
     if (!activePatientId) {
@@ -193,39 +190,27 @@ export default function Dashboard({
 
                     {/* Quick Actions */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                        {/* Wearable Hub Card */}
-                        <div className={`card ${wearableConnected ? 'card-gradient-cyan' : ''}`} style={{ padding: 20 }}>
+                        {/* Nutrition Card */}
+                        <div className="card card-gradient-green" style={{ padding: 20 }}>
                             <div className="section-title" style={{ marginBottom: 12, fontSize: 16 }}>
-                                <Watch size={16} color="var(--accent-cyan)" />
-                                Clinical Wearable Sync
+                                <Utensils size={16} color="var(--accent-green)" />
+                                Precision Nutrition AI
                             </div>
 
-                            {wearableConnected ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                                    <div style={{ position: 'relative' }}>
-                                        <Heart size={44} color="var(--accent-red)" className="pulse-slow" />
-                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: 'white', marginTop: 2 }}>
-                                            {wearablePulse}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>{wearableDevice}</div>
-                                        <div style={{ fontSize: 11, color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                            <div className="pulse-dot" style={{ width: 6, height: 6 }} /> Live Vitals Streaming
-                                        </div>
-                                    </div>
-                                    <button className="btn btn-ghost btn-xs" style={{ marginLeft: 'auto' }} onClick={() => onNavigate('wearable')}>
-                                        Details
-                                    </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <div style={{ background: 'rgba(255,255,255,0.1)', padding: 12, borderRadius: 14 }}>
+                                    <Heart size={32} color="white" />
                                 </div>
-                            ) : (
-                                <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                                    <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>No medical wearable linked.</p>
-                                    <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => onNavigate('wearable')}>
-                                        <Zap size={14} /> Link Smartwatch
-                                    </button>
+                                <div>
+                                    <div style={{ fontSize: 15, fontWeight: 800, color: 'white' }}>Healthy for Parkinson's</div>
+                                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)' }}>
+                                        50+ Bio-active recipes discovered for your specific condition.
+                                    </div>
                                 </div>
-                            )}
+                                <button className="btn btn-white btn-xs" style={{ marginLeft: 'auto' }} onClick={() => onNavigate('recipes')}>
+                                    Explore
+                                </button>
+                            </div>
                         </div>
 
                         <div className="card" style={{ flex: 1 }}>

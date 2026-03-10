@@ -1,7 +1,7 @@
 // src/components/Sidebar.jsx
 import { useState } from 'react';
 import {
-    Brain, Mic, Calendar, Watch, Trophy, Activity,
+    Brain, Mic, Calendar, Trophy, Activity, Utensils,
     ChevronRight, Settings, HelpCircle, Zap, Users
 } from 'lucide-react';
 
@@ -12,9 +12,9 @@ const NAV_ITEMS = [
     { id: 'motor', icon: Activity, label: 'Motor Test', badge: 'NEW' },
     { id: 'appointment', icon: Calendar, label: 'Appointment Bot', badge: null },
     { id: 'imaging', icon: Brain, label: 'Imaging AI Scan', badge: 'NEW' },
-    { id: 'wearable', icon: Watch, label: 'Wearable Fusion', badge: null },
+    { id: 'recipes', icon: Utensils, label: 'Recipe Maker', badge: '50+' },
     { id: 'community', icon: Users, label: 'Community Blog', badge: '5+' },
-    { id: 'gamification', icon: Trophy, label: 'Daily Check-in', badge: null },
+    { id: 'braingym', icon: Trophy, label: 'Brain Gym', badge: 'NEW' },
 ];
 
 export default function Sidebar({ activePage, onNavigate, isOpen, onClose, patients = [], activePatientId }) {

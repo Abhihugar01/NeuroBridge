@@ -156,12 +156,35 @@ export default function AppointmentBot({ activePatientId }) {
 
     const handleSend = () => {
         if (!userInput.trim()) return;
+        const msg = userInput.toLowerCase();
         setMessages(prev => [...prev, { from: 'user', text: userInput }]);
         setUserInput('');
         setTyping(true);
+
         setTimeout(() => {
             setTyping(false);
-            setMessages(prev => [...prev, { from: 'ai', text: 'I am your NeuroVoice Agent. I can help book appointments and translate clinical findings. Please follow the triage buttons for immediate help!' }]);
+
+            let response = "I am your NeuroVoice Agent. I can help book appointments, translate clinical findings, and suggest therapeutic diets. Please follow the triage buttons for immediate help!";
+
+            if (msg.includes('food') || msg.includes('diet') || msg.includes('eat') || msg.includes('recipe')) {
+                if (msg.includes('parkinson')) {
+                    response = "For Parkinson's, I recommend a diet rich in antioxidants and Omega-3. Try our 'Berry & Flax Seed Smoothie' or 'Baked Salmon'. High fiber is also key to help with digestion.";
+                } else if (msg.includes('diabetes') || msg.includes('sugar')) {
+                    response = "Managing blood sugar is crucial. I suggest 'Cauliflower Fried Rice' or 'Chickpea and Tuna Salad'. Focus on low-glycemic foods and high fiber to prevent insulin spikes.";
+                } else if (msg.includes('heart') || msg.includes('cardio') || msg.includes('cholesterol')) {
+                    response = "Heart-healthy diets should be low in sodium. Try the 'Mediterranean Hummus Bowl' or 'Oatmeal with Walnuts'. These help lower LDL cholesterol and support arterial health.";
+                } else if (msg.includes('bp') || msg.includes('pressure') || msg.includes('hypertension')) {
+                    response = "To lower blood pressure, increase potassium and reduce salt. 'Roasted Beetroot Salad' and 'Hibiscus Tea' are excellent choices. Garlic also helps relax blood vessels.";
+                } else if (msg.includes('brain') || msg.includes('memory') || msg.includes('alzheimer')) {
+                    response = "Cognitive health thrives on the MIND diet. Berries, walnuts, and leafy greens are vital. Try our 'Blueberry & Oat Pancakes' or 'Curried Cauliflower' for neuroprotection.";
+                } else {
+                    response = "Healthy eating is medicine! We have 50+ recipes in our 'Recipe Maker' section tailored for specific conditions. Generally, focus on whole foods, healthy fats, and plenty of greens. Would you like a specific recommendation for a condition?";
+                }
+            } else if (msg.includes('hello') || msg.includes('hi')) {
+                response = "Hello! I'm your NeuroVoice Health Assistant. How can I help you today? You can ask about appointments, your scan results, or healthy food recommendations.";
+            }
+
+            setMessages(prev => [...prev, { from: 'ai', text: response }]);
         }, 1400);
     };
 

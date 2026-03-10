@@ -1546,3 +1546,28 @@ select.input option {
     grid-template-columns: 1fr;
   }
 }
+
+.accent {
+  color: var(--accent-cyan);
+  font-weight: 700;
+}
+
+.btn-green {
+  background: var(--accent-green);
+  color: var(--bg-primary);
+}
+
+.btn-purple {
+  background: var(--accent-purple);
+  color: white;
+}
+
+.btn-white {
+  background: white;
+  color: var(--bg-primary);
+}
+
+.btn-xs {
+  padding: 4px 8px;
+  font-size: 11px;
+}

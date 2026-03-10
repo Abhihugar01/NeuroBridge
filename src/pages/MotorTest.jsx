@@ -1,6 +1,6 @@
 // src/pages/MotorTest.jsx
 import { useState, useEffect, useRef } from 'react';
-import { Activity, Zap, Timer, AlertCircle, CheckCircle2, RefreshCw, Smartphone, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Activity, Zap, Timer, AlertCircle, CheckCircle, RefreshCw, Smartphone, ShieldCheck, ChevronRight, Utensils } from 'lucide-react';
 import { api } from '../api/client';
 
 function TapPulse({ x, y }) {
@@ -333,7 +333,7 @@ export default function MotorTest({ vocalResult, onNavigate, patients, activePat
                                 </div>
 
                                 <div className="card" style={{ marginBottom: 30 }}>
-                                    <div className="section-title"><CheckCircle2 size={16} color="var(--accent-green)" /> Clinical Interpretation</div>
+                                    <div className="section-title"><CheckCircle size={16} color="var(--accent-green)" /> Clinical Interpretation</div>
                                     <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                                         {metrics.risk === 'Low' ? (
                                             "Tapping speed and rhythm are within healthy parameters. No significant Bradykinesia detected. Movement amplitude appears stable."
@@ -355,8 +355,8 @@ export default function MotorTest({ vocalResult, onNavigate, patients, activePat
                                         </button>
                                     )}
                                     {vocalResult && (
-                                        <button className="btn btn-xl btn-purple" style={{ width: '100%', marginTop: 12, border: '2px solid white' }} onClick={() => onNavigate('fusion')}>
-                                            <ShieldCheck size={20} /> VIEW FULL MULTIMODAL FUSION REPORT
+                                        <button className="btn btn-xl btn-green" style={{ width: '100%', marginTop: 12, border: '2px solid white' }} onClick={() => onNavigate('recipes')}>
+                                            <Utensils size={20} /> VIEW THERAPEUTIC NUTRITION PLAN
                                         </button>
                                     )}
                                 </div>
