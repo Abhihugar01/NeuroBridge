@@ -267,6 +267,12 @@ export default function SignBridge({ onNavigate, patients = [], activePatientId 
     const frameBuffer   = useRef([]); // Tracking motion over last 10 frames
     const lastHolisticResults = useRef(null);
     const lastRefineTime = useRef(performance.now());
+    const userGesturesRef = useRef(userGestures);
+
+    // Sync Ref with State
+    useEffect(() => {
+        userGesturesRef.current = userGestures;
+    }, [userGestures]);
 
     /* ─── TTS ─────────────────────────────────────────────────────────────── */
     const speak = (text) => {
@@ -473,8 +479,8 @@ export default function SignBridge({ onNavigate, patients = [], activePatientId 
                 emotion = "Inquisitive";
             }
         }
-
-        const res = classifyHolisticSign(results, userGestures);
+        
+        const res = classifyHolisticSign(results, userGesturesRef.current);
         let g = res ? res.value : null;
         if (isQuestion && g) g = g + "?";
         setLiveGesture(g);
