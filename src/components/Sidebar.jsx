@@ -1,17 +1,24 @@
 // src/components/Sidebar.jsx
 import { useState } from 'react';
 import {
-    Brain, Mic, Calendar, Trophy, Activity, Utensils,
+    Brain, Mic, Calendar, Trophy, Activity, Utensils, Hand,
     ChevronRight, Settings, HelpCircle, Zap, Users
 } from 'lucide-react';
 
-const NAV_ITEMS = [
+const CLINICAL_NAV = [
     { id: 'dashboard', icon: Activity, label: 'Dashboard', badge: null },
     { id: 'patients', icon: Users, label: 'Patients', badge: null },
     { id: 'scan', icon: Mic, label: 'Voice Scan', badge: 'LIVE' },
     { id: 'motor', icon: Activity, label: 'Motor Test', badge: 'NEW' },
-    { id: 'appointment', icon: Calendar, label: 'Appointment Bot', badge: null },
     { id: 'imaging', icon: Brain, label: 'Imaging AI Scan', badge: 'NEW' },
+];
+
+const ACCESSIBILITY_NAV = [
+    { id: 'signbridge', icon: Hand, label: 'SignBridge', badge: 'PRO' },
+    { id: 'appointment', icon: Calendar, label: 'Interpreter Bot', badge: null },
+];
+
+const RESOURCE_NAV = [
     { id: 'recipes', icon: Utensils, label: 'Recipe Maker', badge: '50+' },
     { id: 'community', icon: Users, label: 'Community Blog', badge: '5+' },
     { id: 'braingym', icon: Trophy, label: 'Brain Gym', badge: 'NEW' },
@@ -51,8 +58,8 @@ export default function Sidebar({ activePage, onNavigate, isOpen, onClose, patie
 
                 {/* Nav */}
                 <nav className="sidebar-nav">
-                    <div className="nav-section-label">Core Features</div>
-                    {NAV_ITEMS.map(item => (
+                    <div className="nav-section-label">Neurology Suite</div>
+                    {CLINICAL_NAV.map(item => (
                         <button
                             key={item.id}
                             id={`nav-${item.id}`}
@@ -62,6 +69,38 @@ export default function Sidebar({ activePage, onNavigate, isOpen, onClose, patie
                             <item.icon size={18} className="nav-icon" />
                             <span>{item.label}</span>
                             {item.badge && <span className="nav-badge">{item.badge}</span>}
+                        </button>
+                    ))}
+
+                    <div className="nav-section-label" style={{ marginTop: 12 }}>Accessibility Suite</div>
+                    {ACCESSIBILITY_NAV.map(item => (
+                        <button
+                            key={item.id}
+                            id={`nav-${item.id}`}
+                            className={`nav-item${activePage === item.id ? ' active' : ''}`}
+                            onClick={() => onNavigate(item.id)}
+                            style={{ 
+                                borderColor: activePage === item.id ? 'var(--accent-cyan)' : 'transparent',
+                                background: activePage === item.id ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(124, 58, 237, 0.1))' : 'transparent'
+                            }}
+                        >
+                            <item.icon size={18} className="nav-icon" style={{ color: activePage === item.id ? 'var(--accent-cyan)' : 'var(--text-muted)' }} />
+                            <span>{item.label}</span>
+                            {item.badge && <span className="nav-badge" style={{ background: 'linear-gradient(135deg, var(--brand-2), var(--brand-1))' }}>{item.badge}</span>}
+                        </button>
+                    ))}
+
+                    <div className="nav-section-label" style={{ marginTop: 12 }}>Resources & Community</div>
+                    {RESOURCE_NAV.map(item => (
+                        <button
+                            key={item.id}
+                            id={`nav-${item.id}`}
+                            className={`nav-item${activePage === item.id ? ' active' : ''}`}
+                            onClick={() => onNavigate(item.id)}
+                        >
+                            <item.icon size={18} className="nav-icon" />
+                            <span>{item.label}</span>
+                            {item.badge && <span className="nav-badge" style={{ opacity: 0.8 }}>{item.badge}</span>}
                         </button>
                     ))}
 

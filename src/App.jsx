@@ -11,6 +11,7 @@ import Community from './pages/Community';
 import BrainGym from './pages/BrainGym';
 import Patients from './pages/Patients';
 import ImagingScan from './pages/ImagingScan';
+import SignBridge from './pages/SignBridge';
 import { api } from './api/client';
 
 export default function App() {
@@ -64,6 +65,7 @@ export default function App() {
       case 'community': return <Community {...shared} />;
       case 'braingym': return <BrainGym {...shared} />;
       case 'imaging': return <ImagingScan {...shared} />;
+      case 'signbridge': return <SignBridge {...shared} />;
       default: return <Dashboard    {...shared} />;
     }
   };

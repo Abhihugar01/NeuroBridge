@@ -147,6 +147,8 @@ export const api = {
     // ── Generic (for experimental features) ──────────────────────────────────
     get: (path) => request("GET", path),
     post: (path, data) => request("POST", path, data),
+    refineSign: (tokens) => request("POST", "/signbridge/refine", { tokens }),
+    simplifyText: (text) => request("POST", "/signbridge/simplify", { text }),
 };
 
 // ── WebSocket — live waveform amplitude ──────────────────────────────────────

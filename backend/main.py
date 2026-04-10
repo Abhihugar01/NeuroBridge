@@ -1021,6 +1021,62 @@ def send_complete_report(patient: Patient, db: Session):
         logger.error("Failed to send combined report: %s", e)
 
 
+@app.post("/signbridge/refine", tags=["Analysis"])
+async def signbridge_refine(data: dict):
+    """
+    Simulates an LLM refinement of sign language tokens into fluent sentences.
+    Processes Deaf -> Hearing pipeline.
+    """
+    tokens = data.get("tokens", "").upper()
+    
+    MAP = {
+        "HV": "How are you doing today?",
+        "HL": "Hello, good morning.",
+        "LV": "I really love this application!",
+        "BD": "I am having a bit of a difficult day.",
+        "AB": "Sending you a big virtual hug.",
+        "L": "Please look to the left.",
+        "R": "Please look to the right.",
+        "W": "Please wait for a moment.",
+        "H": "I need some assistance, please.",
+        "D": "Doctor is coming.",
+        "M": "Medicine time.",
+    }
+    
+    refined = MAP.get(tokens, f"Interpreted: {tokens}")
+    # Heuristic for longer fingerspelling
+    if len(tokens) >= 5 and tokens not in MAP:
+        refined = f"Words spelled: {tokens.capitalize()}"
+
+    return {"refined": refined}
+
+@app.post("/signbridge/simplify", tags=["Analysis"])
+async def signbridge_simplify(data: dict):
+    """
+    Translates complex spoken English into sign-language friendly (topic-comment) structure.
+    Processes Hearing -> Deaf pipeline.
+    """
+    text = data.get("text", "").lower()
+    
+    # Simple rule-based simplification for medical/daily use
+    # In production, this would be an LLM call
+    simplified = text
+    
+    # Remove fillers and articles
+    for word in ["the ", "a ", "an ", "is ", "are ", "am ", "could you ", "please ", "would you mind "]:
+        simplified = simplified.replace(word, "")
+        
+    # Temporal indicators to the front (Sign grammar often starts with time/topic)
+    if "today" in simplified: simplified = "today " + simplified.replace("today", "")
+    if "now" in simplified: simplified = "now " + simplified.replace("now", "")
+    
+    # Question structures
+    if "?" in simplified or any(q in simplified for q in ["what", "how", "where", "when", "why"]):
+        simplified = simplified + " ?"
+        
+    return {"simplified": simplified.strip().upper()}
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 #   GAMIFICATION HELPERS & ENDPOINTS
 # ══════════════════════════════════════════════════════════════════════════════
