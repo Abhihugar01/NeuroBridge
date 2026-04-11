@@ -94,6 +94,56 @@ def health_check():
         "message": "NeuroVoice AI backend is running" if model_ready else "Backend running but model not trained yet",
     }
 
+@app.post("/seed", tags=["System"])
+def seed_demo_patients(db: Session = Depends(get_db)):
+    """Populate database with 5 diverse demo patients and their clinical history."""
+    try:
+        # Check if already seeded
+        if db.query(Patient).count() > 0:
+            return {"status": "skipped", "message": "Database already contains patients."}
+
+        # 1. Healthy Control
+        p1 = Patient(name="Sarah Johnson", age=42, gender="Female", language="en", email="sarah@example.com")
+        db.add(p1)
+        db.flush()
+        s1 = VoiceSession(patient_id=p1.id, risk_score=12.5, risk_label="Healthy", parkinson_prob=0.08, fo_mean=210.5, jitter_local=0.004, hnr=24.2, ppe=0.04, clinical_stage="N/A - Control")
+        db.add(s1)
+
+        # 2. Early Stage PD (H&Y 1)
+        p2 = Patient(name="Robert Miller", age=68, gender="Male", language="en", email="robert@example.com")
+        db.add(p2)
+        db.flush()
+        s2 = VoiceSession(patient_id=p2.id, risk_score=48.2, risk_label="Moderate", parkinson_prob=0.52, fo_mean=145.2, jitter_local=0.012, hnr=18.5, ppe=0.18, clinical_stage="H&Y Stage 1")
+        db.add(s2)
+
+        # 3. Intermediate PD (H&Y 3)
+        p3 = Patient(name="Elena Rodriguez", age=72, gender="Female", language="en", email="elena@example.com")
+        db.add(p3)
+        db.flush()
+        s3 = VoiceSession(patient_id=p3.id, risk_score=82.7, risk_label="High", parkinson_prob=0.89, fo_mean=185.0, jitter_local=0.025, hnr=12.4, ppe=0.32, clinical_stage="H&Y Stage 3")
+        db.add(s3)
+
+        # 4. Atypical Parkinsonism Demo
+        p4 = Patient(name="James Chen", age=59, gender="Male", language="en")
+        db.add(p4)
+        db.flush()
+        s4 = VoiceSession(patient_id=p4.id, risk_score=65.0, risk_label="Moderate", parkinson_prob=0.61, fo_mean=130.4, jitter_local=0.009, hnr=15.2, ppe=0.21, clinical_stage="Subclinical")
+        db.add(s4)
+
+        # 5. Recovery / Treatment Monitoring Case
+        p5 = Patient(name="David Wilson", age=65, gender="Male", language="en")
+        db.add(p5)
+        db.flush()
+        # Historical sessions (showing improvement)
+        db.add(VoiceSession(patient_id=p5.id, recorded_at=datetime(2024, 1, 15), risk_score=75.0, risk_label="High", parkinson_prob=0.75, fo_mean=140.0, jitter_local=0.02, hnr=14.0, ppe=0.28, clinical_stage="Stage 2"))
+        db.add(VoiceSession(patient_id=p5.id, recorded_at=datetime(2024, 2, 20), risk_score=55.0, risk_label="Moderate", parkinson_prob=0.55, fo_mean=142.0, jitter_local=0.015, hnr=16.5, ppe=0.22, clinical_stage="Stage 2"))
+
+        db.commit()
+        return {"status": "success", "message": "Seeded 5 clinical profiles."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 

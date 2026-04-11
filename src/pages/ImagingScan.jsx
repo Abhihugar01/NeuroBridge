@@ -63,6 +63,22 @@ export default function ImagingScan({ patients, activePatientId, onNavigate }) {
                                     </div>
                                     <p style={{ fontWeight: 700, fontSize: 16 }}>Upload Patient Scan</p>
                                     <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 8 }}>Supports JPG, PNG (DaT Heatmaps)</p>
+                                    <button 
+                                        className="btn btn-ghost btn-sm" 
+                                        style={{ marginTop: 20, color: 'var(--accent-cyan)' }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            fetch('/sample_dat_scan.png')
+                                                .then(res => res.blob())
+                                                .then(blob => {
+                                                    const file = new File([blob], "sample_dat_scan.png", { type: "image/png" });
+                                                    setFile(file);
+                                                    setPreview('/sample_dat_scan.png');
+                                                });
+                                        }}
+                                    >
+                                        Try with Sample Case
+                                    </button>
                                 </div>
                             )}
                             <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleFileChange} />

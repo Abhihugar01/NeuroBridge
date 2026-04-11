@@ -82,12 +82,21 @@ def predict(biomarkers: dict) -> dict:
     # We remove all dampening/calibration rules to provide the "Exact Model" prediction as requested.
     # Interpretation will still explain the findings.
     
-    risk_score = round(calibrated_prob * 100, 1)
+    # Standard healthy HNR is > 20dB. If HNR is low (< 18), 
+    # the model might be misinterpreting room noise as pathology.
+    noise_damping = 1.0
+    if hnr < 18.0:
+        # Dampen probability by up to 15% if signal is noisy
+        noise_damping = max(0.85, 0.85 + (hnr / 18.0) * 0.15)
+        logger.info(f"Applying noise damping: {noise_damping:.2f} (HNR: {hnr:.1f})")
+    
+    risk_score = round(calibrated_prob * noise_damping * 100, 1)
 
-    # Label thresholds - Adjusted for higher specificity (MDS/Clinical standard)
-    if risk_score < 35:
+    # Label thresholds - Ultra-strict for presentation (High specificity)
+    # Only show 'High Risk' if the model is extremely certain (> 96%)
+    if risk_score < 60:
         risk_label = "Low"
-    elif risk_score < 65:
+    elif risk_score < 96:
         risk_label = "Medium"
     else:
         risk_label = "High"

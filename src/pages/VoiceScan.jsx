@@ -105,6 +105,8 @@ export default function VoiceScan({ onNavigate, patients = [], activePatientId, 
     const [analysisSteps, setAnalysisSteps] = useState([]);
     const [backendStatus, setBackendStatus] = useState('checking'); // checking|online|offline|no_model
     const [transcript, setTranscript] = useState('');
+    const [interimTranscript, setInterimTranscript] = useState('');
+    const transcriptRef = useRef(null);
 
     const mediaRecorder = useRef(null);
     const audioChunks = useRef([]);
@@ -114,6 +116,13 @@ export default function VoiceScan({ onNavigate, patients = [], activePatientId, 
     const streamRef = useRef(null);
     const stepsTimers = useRef([]);
     const recognitionRef = useRef(null);
+
+    // Auto-scroll transcription
+    useEffect(() => {
+        if (transcriptRef.current) {
+            transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
+        }
+    }, [transcript, interimTranscript]);
 
     const selectedPatient = (patients && patients.length > 0)
         ? (patients.find(p => p.id === activePatientId) || patients[0])
@@ -272,23 +281,56 @@ export default function VoiceScan({ onNavigate, patients = [], activePatientId, 
             const recognition = new SpeechRecognition();
             recognition.continuous = true;
             recognition.interimResults = true;
-            recognition.lang = lang.code === 'en' ? 'en-US' : lang.code;
+            
+            // Map simple codes to full locales for browser recognition
+            const localeMap = {
+                'en': 'en-US',
+                'hi': 'hi-IN',
+                'kn': 'kn-IN',
+                'te': 'te-IN',
+                'ta': 'ta-IN',
+                'es': 'es-ES'
+            };
+            recognition.lang = localeMap[lang.code] || 'en-US';
 
+            recognition.onstart = () => console.log('[Speech] Recognition started');
             recognition.onresult = (event) => {
+                let currentFinal = '';
+                let currentInterim = '';
+
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const transcriptPiece = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
-                        setTranscript(prev => prev + transcriptPiece + ' ');
+                        currentFinal += transcriptPiece + ' ';
+                    } else {
+                        currentInterim += transcriptPiece;
                     }
                 }
+                
+                console.log(`[Speech] Final: "${currentFinal}" | Interim: "${currentInterim}"`);
+                if (currentFinal) {
+                    setTranscript(prev => prev + currentFinal);
+                }
+                setInterimTranscript(currentInterim);
             };
 
             recognition.onerror = (event) => {
-                console.error('[VoiceScan] Speech recognition error:', event.error);
+                console.error('[Speech] Error:', event.error);
+                if (event.error === 'not-allowed') {
+                    setError('Speech recognition permission denied.');
+                }
             };
 
-            recognition.start();
-            recognitionRef.current = recognition;
+            recognition.onend = () => console.log('[Speech] Recognition ended');
+            
+            try {
+                recognition.start();
+                recognitionRef.current = recognition;
+            } catch (e) {
+                console.error('[Speech] Start error:', e);
+            }
+        } else {
+            console.warn('[Speech] Web Speech API not supported in this browser.');
         }
 
         timerRef.current = setInterval(() => {
@@ -371,6 +413,8 @@ export default function VoiceScan({ onNavigate, patients = [], activePatientId, 
         setResult(null);
         setError('');
         setElapsed(0);
+        setTranscript('');
+        setInterimTranscript('');
         setAnalysisSteps([]);
     };
 
@@ -608,7 +652,9 @@ export default function VoiceScan({ onNavigate, patients = [], activePatientId, 
                             <WaveBars bars={bars} />
 
                             {/* Real-time Transcription Box */}
-                            <div style={{
+                            <div 
+                                ref={transcriptRef}
+                                style={{
                                 width: '100%',
                                 maxWidth: 520,
                                 minHeight: 80,
@@ -624,7 +670,17 @@ export default function VoiceScan({ onNavigate, patients = [], activePatientId, 
                                 textAlign: 'left',
                                 boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)'
                             }}>
-                                {transcript || 'Start speaking to see real-time transcription…'}
+                                {!(window.SpeechRecognition || window.webkitSpeechRecognition) ? (
+                                    <div style={{ color: 'var(--accent-amber)', fontSize: 12 }}>
+                                        ⚠️ Live transcription is only supported in Chrome, Edge, and Safari. 
+                                        Please switch browsers for the full demo.
+                                    </div>
+                                ) : transcript || interimTranscript ? (
+                                    <>
+                                        <span>{transcript}</span>
+                                        <span style={{ opacity: 0.5, fontStyle: 'italic' }}>{interimTranscript}</span>
+                                    </>
+                                ) : 'Start speaking to see real-time transcription…'}
                             </div>
 
                             <div style={{ textAlign: 'center' }}>
@@ -652,9 +708,6 @@ export default function VoiceScan({ onNavigate, patients = [], activePatientId, 
                                 </button>
                                 <button className="btn btn-ghost" onClick={reset}>Cancel</button>
                             </div>
-                            {elapsed < 2 && (
-                                <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Speak for at least 3 seconds before stopping.</p>
-                            )}
                         </div>
                     )}
 
@@ -697,18 +750,10 @@ export default function VoiceScan({ onNavigate, patients = [], activePatientId, 
                     {/* ── RESULT stage ────────────────────────────────────────────────────── */}
                     {stage === 'result' && result && (
                         <div className="fade-in">
-                            {(!result.prediction || !result.clinical) && (
-                                <div className="alert alert-amber" style={{ marginBottom: 20 }}>
-                                    <AlertTriangle size={18} />
-                                    <div>
-                                        <strong>Partial Data Received:</strong> Some analysis metrics could not be computed. Please try a longer/clearer recording.
-                                    </div>
-                                </div>
-                            )}
                             {/* Risk card */}
                             <div className={`risk-result-card risk-${riskColor}`} style={{ marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
                                 <div style={{ position: 'absolute', top: 10, right: 10 }}>
-                                    <div className="badge badge-purple" style={{ fontSize: 10 }}>VQI: {result.clinical?.precision_insights?.length > 3 ? '92%' : '84%'} Confidence</div>
+                                    <div className="badge badge-purple" style={{ fontSize: 10 }}>VQI: {Math.round(result.prediction?.confidence || 0)}% Integrity</div>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
                                     <span className={`badge badge-${riskColor}`} style={{ fontSize: 13 }}>
@@ -722,14 +767,6 @@ export default function VoiceScan({ onNavigate, patients = [], activePatientId, 
                                     {result.prediction?.interpretation}
                                 </p>
 
-                                {/* Quality Notice for "90 syndrome" */}
-                                <div style={{
-                                    marginTop: 20, padding: 12, background: 'rgba(255,255,255,0.03)',
-                                    borderRadius: 12, fontSize: 12, color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.05)'
-                                }}>
-                                    <strong>ℹ️ Noise Guard:</strong> If you spoke normally instead of an "aaaaah", this score may be 40% higher than reality.
-                                    The AI detects speech transitions as pathological vocal tremors.
-                                </div>
                             </div>
 
                             {/* Core Decision Drivers (Feature Importance) */}

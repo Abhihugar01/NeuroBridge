@@ -55,7 +55,7 @@ FEATURE_COLS = [
 LABEL_COL = "status"
 
 def download_dataset() -> pd.DataFrame:
-    print("⬇️  Downloading UCI Parkinson's dataset (with multi-mirror fallbacks)...")
+    print("Downloading UCI Parkinson's dataset (with multi-mirror fallbacks)...")
     
     mirrors = [
         "https://raw.githubusercontent.com/Aniruddha-Tushar/Parkinson-s-Disease-Detection/master/Parkinsons%20Train%20Data.csv",
@@ -76,12 +76,12 @@ def download_dataset() -> pd.DataFrame:
                 # Handle CSV differences (header vs no header)
                 df = pd.read_csv(io.StringIO(r.text))
                 if 'status' in df.columns or 'MDVP:Fo(Hz)' in df.columns:
-                    print(f"   ✅ Success! Loaded {len(df)} samples.")
+                    print(f"   [OK] Success! Loaded {len(df)} samples.")
                     return df
         except Exception as e:
             continue
 
-    print("⚠️  All remote mirrors failed. Checking local fallback...")
+    print("[WARNING] All remote mirrors failed. Checking local fallback...")
     local = os.path.join(MODEL_DIR, "parkinsons.data")
     if os.path.exists(local):
         return pd.read_csv(local)
@@ -93,7 +93,7 @@ def augment_data(X, y, noise_factor=0.015, iterations=3):
     Creates synthetic variations with noise, gain shifts, and feature tilts.
     Simulates variations in microphone sensitivity and environment.
     """
-    print(f"✨ Augmenting data: {iterations}x variations...")
+    print(f"[INFO] Augmenting data: {iterations}x variations...")
     X_aug, y_aug = [X], [y]
     
     for _ in range(iterations):
@@ -120,7 +120,12 @@ def train():
 
     # 1. Subject ID Extraction (Crucial to prevent data leakage)
     # The 'name' column looks like 'phon_R01_S01_1'. 'S01' is the person.
-    df['subject_id'] = df['name'].str.extract(r'_(S\d+)_')
+    if 'name' in df.columns:
+        df['subject_id'] = df['name'].str.extract(r'_(S\d+)_')
+    else:
+        # Fallback for datasets without a name column (use index as proxy if needed, 
+        # though subject-grouping is preferred if data exists)
+        df['subject_id'] = df.index.astype(str)
     
     # Validate columns
     missing = [c for c in FEATURE_COLS + [LABEL_COL] if c not in df.columns]
@@ -131,15 +136,15 @@ def train():
     y_raw = df[LABEL_COL].values
     groups = df['subject_id'].values
 
-    print(f"\n📊 Initial distribution: Healthy={sum(y_raw==0)}, Parkinson's={sum(y_raw==1)}")
-    print(f"👥 Unique subjects: {len(np.unique(groups))}")
+    print(f"\n[DATA] Initial distribution: Healthy={sum(y_raw==0)}, Parkinson's={sum(y_raw==1)}")
+    print(f"Subjects: {len(np.unique(groups))}")
 
     # 2. Augmentation (Noise injection) 
     # We only augment the training data LATER to avoid synthetic leakage
     X_boosted, y_boosted = augment_data(X_raw, y_raw, noise_factor=0.02, iterations=2)
     
     # 3. SMOTE
-    print("⚖️  Applying SMOTE to balance classes...")
+    print("[BALANCING] Applying SMOTE to balance classes...")
     smote = SMOTE(random_state=42)
     X_resampled, y_resampled = smote.fit_resample(X_boosted, y_boosted)
     
@@ -149,7 +154,7 @@ def train():
 
     # 5. Hyperparameter Tuning (USING GROUPKFOLD)
     # This is the 'Real-World' test: Can we predict Parkinson's in a person the model has NEVER seen?
-    print("\n🔍 Tuning hyperparameters using GroupKFold (Subject-independent)...")
+    print("\n[TUNING] Tuning hyperparameters using GroupKFold (Subject-independent)...")
     
     # We use a smaller grid and more regularization to prevent overfitting
     param_grid = {
@@ -184,7 +189,7 @@ def train():
 
     grid_search.fit(X_orig_scaled, y_raw, groups=groups)
     model = grid_search.best_estimator_
-    print(f"✅ Best Parameters: {grid_search.best_params_}")
+    print(f"[OK] Best Parameters: {grid_search.best_params_}")
 
     # 6. Final Subject-Independent Validation
     print("\n🔄 Running 10-fold GroupKFold validation (True Accuracy)...")
@@ -212,8 +217,8 @@ def train():
     joblib.dump(scaler,        SCALER_PATH)
     joblib.dump(FEATURE_COLS,  FEATURE_PATH)
 
-    print(f"\n✅ Model saved → {MODEL_PATH}")
-    print(f"✅ Scaler saved → {SCALER_PATH}")
+    print(f"\n[OK] Model saved -> {MODEL_PATH}")
+    print(f"[OK] Scaler saved -> {SCALER_PATH}")
     print(f"\nFeature importance (top 8):")
     importances = model.feature_importances_
     ranked = sorted(zip(FEATURE_COLS, importances), key=lambda x: -x[1])
@@ -226,5 +231,5 @@ def train():
 
 if __name__ == "__main__":
     acc = train()
-    print(f"\n🎯 Final model accuracy: {acc*100:.1f}%")
+    print(f"\n[RESULTS] Final model accuracy: {acc*100:.1f}%")
     sys.exit(0)

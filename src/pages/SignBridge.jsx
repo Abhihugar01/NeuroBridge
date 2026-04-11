@@ -84,12 +84,13 @@ function classifyHolisticSign(results, userDictionary = []) {
     }
 
     // ── 1. Check User's Personal Trained Signs (Priority) ──
-    const userMatch = userDictionary.find(g => g.pattern === sig && (g.loc === 'neutral' || g.loc === location));
+    // For user signs, we prioritize the hand pattern over strict location
+    const userMatch = userDictionary.find(g => g.pattern === sig);
     if (userMatch) return { type: 'word', value: userMatch.value };
 
-    // ── 2. Fallback to Global Registry ──
+    // ── 2. Fallback to Global Registry (Strict) ──
     const match = GESTURE_REGISTRY.find(g => g.pattern === sig && (g.loc === 'neutral' || g.loc === location));
-    return match ? { type: match.type, value: match.value } : null;
+    return match ? { type: match.type, value: match.value } : { type: 'debug', value: sig, location };
 }
 
 /* ─── Geometric Finger Extension Helper ────────────────────────────────────── */
@@ -228,6 +229,7 @@ export default function SignBridge({ onNavigate, patients = [], activePatientId 
 
     // Sign recognition state
     const [liveGesture, setLiveGesture] = useState(null);
+    const [diagnosticSig, setDiagnosticSig] = useState(null);
     const [gestureSeq, setGestureSeq]   = useState([]);
     const [holdPct, setHoldPct]         = useState(0);
     const [userGestures, setUserGestures] = useState(() => {
@@ -481,9 +483,20 @@ export default function SignBridge({ onNavigate, patients = [], activePatientId 
         }
         
         const res = classifyHolisticSign(results, userGesturesRef.current);
-        let g = res ? res.value : null;
-        if (isQuestion && g) g = g + "?";
+        let g = null;
+        let debugSig = null;
+
+        if (res) {
+            if (res.type === 'debug') {
+                debugSig = res.value;
+            } else {
+                g = res.value;
+                if (isQuestion && g) g = g + "?";
+            }
+        }
+
         setLiveGesture(g);
+        setDiagnosticSig(debugSig); // New state for readout
         setEmotionMode(emotion);
 
         const HOLD_FRAMES = 25; 
@@ -668,6 +681,11 @@ export default function SignBridge({ onNavigate, patients = [], activePatientId 
                                             <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', background: 'rgba(0,0,0,0.3)', padding: '2px 8px', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
                                                 <Activity size={10} /> Conf: {Math.round(handConfidence * 100)}%
                                             </div>
+                                            {diagnosticSig && (
+                                                <div style={{ fontSize: 9, color: 'var(--accent-cyan)', background: 'rgba(6,182,212,0.15)', padding: '2px 8px', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 6, border: '1px solid rgba(6,182,212,0.3)' }}>
+                                                    <Brain size={10} /> Pattern: {diagnosticSig}
+                                                </div>
+                                            )}
                                         </div>
 
                                         <button onClick={toggleCamera}
@@ -686,27 +704,54 @@ export default function SignBridge({ onNavigate, patients = [], activePatientId 
                                     <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{userGestures.length} MAPPED</span>
                                 </div>
                                 
-                                {!isTraining ? (
-                                    <button className="btn btn-secondary" onClick={() => setIsTraining(true)} style={{ width: '100%', fontSize: 12 }}>
-                                        + Map New Live Gesture
-                                    </button>
-                                ) : (
-                                    <div style={{ display: 'flex', gap: 6 }}>
-                                        <input 
-                                            type="text" 
-                                            value={trainingLabel}
-                                            onChange={(e) => setTrainingLabel(e.target.value)}
-                                            placeholder="Label (e.g. HELP)"
-                                            style={{ flex: 1, height: 32, fontSize: 12, background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: 6, padding: '0 10px', color: 'white' }}
-                                        />
-                                        <button className="btn btn-primary" onClick={saveTrainedSign} style={{ height: 32, fontSize: 11, padding: '0 12px' }}>
-                                            Save
+                                <div style={{ marginBottom: 12 }}>
+                                    {!isTraining ? (
+                                        <button className="btn btn-secondary" onClick={() => setIsTraining(true)} style={{ width: '100%', fontSize: 12 }}>
+                                            + Map New Live Gesture
                                         </button>
-                                        <button className="btn btn-secondary" onClick={() => setIsTraining(false)} style={{ height: 32, fontSize: 11, padding: '0 8px' }}>
-                                            ✕
-                                        </button>
-                                    </div>
-                                )}
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                            <div style={{ 
+                                                display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', 
+                                                background: 'rgba(0,0,0,0.3)', borderRadius: 8, border: '1px solid var(--brand-1)' 
+                                            }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 2 }}>CURRENT HAND SHAPE</div>
+                                                    <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--brand-1)', fontFamily: 'monospace' }}>
+                                                        {diagnosticSig || '00000'}
+                                                    </div>
+                                                </div>
+                                                <div style={{ textAlign: 'right' }}>
+                                                    <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 2 }}>FINGERS</div>
+                                                    <div style={{ display: 'flex', gap: 2 }}>
+                                                        {(diagnosticSig || '00000').split('').map((f, i) => (
+                                                            <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: f === '1' ? 'var(--brand-1)' : 'rgba(255,255,255,0.1)' }} />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                <input 
+                                                    type="text" 
+                                                    value={trainingLabel}
+                                                    onChange={(e) => setTrainingLabel(e.target.value)}
+                                                    placeholder="Label (e.g. HELP)"
+                                                    style={{ flex: 1, height: 36, fontSize: 12, background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: 6, padding: '0 10px', color: 'white' }}
+                                                />
+                                                <button className="btn btn-primary" onClick={saveTrainedSign} style={{ height: 36, fontSize: 11, padding: '0 12px' }}>
+                                                    Save Pattern
+                                                </button>
+                                                <button className="btn btn-secondary" onClick={() => setIsTraining(false)} style={{ height: 36, fontSize: 11, padding: '0 8px' }}>
+                                                    ✕
+                                                </button>
+                                            </div>
+                                            <p style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>
+                                                Perform gesture first, then click Save to lock it in.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
 
                                 {userGestures.length > 0 && (
                                     <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
